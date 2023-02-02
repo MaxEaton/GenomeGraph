@@ -4,12 +4,10 @@
 #include <vector>
 #include <array>
 
-#define input  "seq4.txt"
-#define output "dir4.txt"
 #define longest 43
 #define biggest 748
 
-void read(std::array<std::vector<std::bitset<biggest>>, longest> &sequences) {
+void read(std::array<std::vector<std::bitset<biggest>>, longest> &sequences, std::string input) {
     std::ifstream inFile(input);
     std::string line;
     while(getline(inFile, line)) {
@@ -47,9 +45,12 @@ void record(std::array<std::vector<std::bitset<biggest>>, longest> &sequences, s
     outFile << std::endl;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    std::string input  = argv[1];
+    std::string output = argv[2];
+
     std::array<std::vector<std::bitset<biggest>>, longest> sequences;
-    read(sequences);
+    read(sequences, input);
 
     std::ofstream outFile(output);
     for (int i=0; i<longest-1; i++) {
