@@ -14,12 +14,10 @@ void read(std::array<std::vector<std::bitset<biggest>>, longest> &sequences, std
         std::stringstream lineStream(line);
         std::string num;
         std::bitset<biggest> sequence;
-        int size = 0;
         while (lineStream >> num) {
             sequence.flip(std::stoi(num)-1);
-            size += 1;
         }
-        sequences[size-1].push_back(sequence);
+        sequences[sequence.count()-1].push_back(sequence);
     }
     inFile.close();
 }
@@ -56,7 +54,7 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<longest-1; i++) {
         for (int j=0; j<sequences[i].size(); j++) {
             std::vector<std::bitset<biggest>> visited;
-            for (int m=i+1; m<longest-2; m++) {
+            for (int m=i+1; m<longest; m++) {
                 for (int n=0; n<sequences[m].size(); n++) {
                     if ((sequences[i][j] ^ sequences[m][n]).count() == m-i) {
                         for (std::bitset<biggest> v : visited) {
