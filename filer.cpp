@@ -27,19 +27,23 @@ Gene* Gene::addLL(Gene* curr) {
 
 bool Gene::findEnd(Gene* parent, int i) {
     if (this == parent) return false;
-    print(parent->sequence);
+//    print(parent->sequence);
     bool end = true;
     for (Gene* child : parent->children) {
-        if ((sequence & child->sequence) == child->sequence) {
+        if ((sequence & child->sequence) == child->sequence && (masks[i] & child->sequence) == parent->sequence) {
             end = false;
-            std::cout << "    ";
-            print(child->sequence);
+//            std::cout << "    ";
+//            print(child->sequence);
             // visiteds |= masks[i] & child->sequence;
             // in lieu of guardian
-            for (Gene* guard : guardian) {
-                if ((guard->sequence & child->sequence) == child->sequence) goto skip;
+//            for (Gene* guard : guardian) {
+//                if ((guard->sequence & child->sequence) == child->sequence) goto skip;
+//            }
+            int newI;
+            for (int j=0; j<biggest; j++) {
+                if (child->sequence[j]) newI = j;
             }
-            if (findEnd(child, i)) {
+            if (findEnd(child, newI)) {
                 child->children.push_back(this);
                 this->guardian.push_back(child);
             }
@@ -50,8 +54,8 @@ bool Gene::findEnd(Gene* parent, int i) {
 }
 
 void Gene::insert() {
-    std::cout << "new" << std::endl;
-    print(sequence);
+//    std::cout << "new" << std::endl;
+//    print(sequence);
     for (int i=0; i<biggest; i++) {
         if (sequence[i]) {
             if (findEnd(heads[i], i)) {
@@ -146,28 +150,28 @@ int main(int argc, char *argv[]) {
         }
         gene = gene->next;
     }
-    std::bitset<biggest> guy;
-    guy.set(0);
-    guy.set(1);
-    guy.set(4);
-    guy.set(467);
-    for (int i=2; i<4; i++) {
-        std::cout << i << std::endl;
-        gene = sequences[i];
-        while (gene) {
-            gene->insert();
-            if (gene->sequence == guy) break;
-            gene = gene->next;
-        }
-    }
-//    for (int i=2; i<longest; i++) {
+//    std::bitset<biggest> guy;
+//    guy.set(0);
+//    guy.set(1);
+//    guy.set(4);
+//    guy.set(467);
+//    for (int i=2; i<4; i++) {
 //        std::cout << i << std::endl;
 //        gene = sequences[i];
 //        while (gene) {
 //            gene->insert();
+//            if (gene->sequence == guy) break;
 //            gene = gene->next;
 //        }
 //    }
+    for (int i=2; i<longest; i++) {
+        std::cout << i << std::endl;
+        gene = sequences[i];
+        while (gene) {
+            gene->insert();
+            gene = gene->next;
+        }
+    }
 
     std::ofstream outFile(output);
     for (Gene* head : Gene::heads) {

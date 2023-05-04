@@ -19,7 +19,7 @@ std::bitset<biggest> read(std::array<std::vector<std::bitset<biggest>>, longest>
         while (lineStream >> num) {
             sequence.flip(std::stoi(num)-1);
         }
-        if (sequence.count()-1) sequences[sequence.count()-1].push_back(sequence); // wasting 0th index
+        if (sequence.count()-1) sequences[sequence.count()-1].push_back(sequence); // TODO wasting 0th index
         else sources |= sequence;
     }
     inFile.close();
@@ -56,6 +56,7 @@ void print(std::bitset<biggest> sequence) {
 
 struct Gene {
     static std::array<Gene*, biggest> heads;
+    static std::array<std::bitset<biggest>, biggest> masks;
 
     std::bitset<biggest> sequence;
     std::bitset<biggest> visiteds;
@@ -66,21 +67,25 @@ struct Gene {
         sequence = _sequence;
     }
 
-    bool findEnd(Gene* parent) {
+    bool findEnd(Gene* parent, int i) {
         if (this == parent) return false;
+        print(parent->sequence);
         bool end = true;
         for (Gene* child : parent->children) {
             if ((sequence & child->sequence) == child->sequence) {
-                for (Gene* guard : guardian) {
-                    if ((guard->sequence & child->sequence) == child->sequence) goto skip;
-                }
-//                visiteds |= child->sequence;
-                if (findEnd(child)) {
-                    child->children.push_back(this);
-                    this->guardian.push_back(child);
-                }
                 end = false;
-                skip:;
+                if ((masks[i] & child->sequence).count() == 0) {
+                    std::cout << "    ";
+                    print(child->sequence);
+                    for (Gene* guard : guardian) {
+                        if ((guard->sequence & child->sequence) == child->sequence) goto skip; // TODO order og bitset array
+                    }
+                    if (findEnd(child, i)) {
+                        child->children.push_back(this);
+                        this->guardian.push_back(child);
+                    }
+                    skip:;
+                }
             }
         }
 
@@ -88,15 +93,16 @@ struct Gene {
     }
 
     void insert() {
+        print(sequence);
         for (int i=0; i<biggest; i++) {
-            if (sequence[i] && !visiteds[i]) {
-                visiteds.set(i);
-                if (findEnd(heads[i])) {
+            if (sequence[i]) {
+                if (findEnd(heads[i], i)) {
                     heads[i]->children.push_back(this);
                     this->guardian.push_back(heads[i]);
                 }
             }
         }
+        std::cout << std::endl;
     }
 
     void traverse(std::ofstream &outFile) {
@@ -111,6 +117,7 @@ struct Gene {
 };
 
 std::array<Gene*, biggest> Gene::heads;
+std::array<std::bitset<biggest>, biggest> Gene::masks;
 
 int main(int argc, char *argv[]) {
     std::string input  = argv[1];
@@ -118,6 +125,12 @@ int main(int argc, char *argv[]) {
 
     std::array<std::vector<std::bitset<biggest>>, longest> sequences;
     std::bitset<biggest> sources = read(sequences, input);
+
+    std::bitset<biggest> mask;
+    for (int j=0; j<biggest; j++) {
+        Gene::masks[j] = mask;
+        mask.set(j);
+    }
 
     Gene* gene;
     std::bitset<biggest> headSeq;
@@ -133,7 +146,7 @@ int main(int argc, char *argv[]) {
             if (sequences[1][j][k]) Gene::heads[k]->children.push_back(gene);
         }
     }
-    for (int i=2; i<longest; i++) {
+    for (int i=2; i<3; i++) {
         std::cout << i << ": " << sequences[i].size() << std::endl;
         for (int j=0; j<sequences[i].size(); j++) {
             gene = new Gene(sequences[i][j]);
@@ -141,15 +154,27 @@ int main(int argc, char *argv[]) {
             gene->visiteds.reset();
         }
     }
+    gene = new Gene(sequences[3][0]);
+    gene->insert();
+    gene->visiteds.reset();
+//    for (int i=2; i<longest; i++) {
+//        std::cout << i << ": " << sequences[i].size() << std::endl;
+//        for (int j=0; j<sequences[i].size(); j++) {
+//            gene = new Gene(sequences[i][j]);
+//            gene->insert();
+//            gene->visiteds.reset();
+//        }
+//    }
 
     std::ofstream outFile(output);
     for (Gene* head : Gene::heads) {
-        if ((head->sequence & sources) == head->sequence) head->traverse(outFile);
-        else {
-            for (Gene* child : head->children) {
-                if (!child->visiteds[0]) child->traverse(outFile);
-            }
-        }
+//        if ((head->sequence & sources) == head->sequence) head->traverse(outFile);
+//        else {
+//            for (Gene* child : head->children) {
+//                if (!child->visiteds[0]) child->traverse(outFile);
+//            }
+//        }
+        head->traverse(outFile);
     }
     outFile.close();
 
